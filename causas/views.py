@@ -1,9 +1,7 @@
 # causas/views.py
-
 from django.shortcuts import render, get_object_or_404
-# --- NUEVAS IMPORTACIONES ---
 from django.urls import reverse_lazy
-from django.views.generic.edit import CreateView
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from .models import Causa
 
 
@@ -30,8 +28,6 @@ def detalle_causa(request, pk):
     }
     return render(request, 'causas/detalle_causa.html', contexto)
 
-
-# --- NUEVA VISTA BASADA EN CLASES PARA CREAR ---
 class CausaCreateView(CreateView):
     model = Causa
     # Especificamos los campos que queremos que aparezcan en el formulario
@@ -43,4 +39,28 @@ class CausaCreateView(CreateView):
 
     # La URL a la que se redirigirá al usuario después de crear una causa con éxito
     # reverse_lazy es la forma segura de referenciar una URL por su nombre
+    success_url = reverse_lazy('lista_causas')
+
+class CausaUpdateView(UpdateView):
+    model = Causa
+    # Usamos los mismos campos que en el formulario de creación
+    fields = ['rol', 'operacion', 'etapa_juicio', 'estado_causa', 'total_costas', 
+            'arbitro', 'abogado_encargado', 'fecha_asignacion', 'deudor', 'tribunal']
+    
+    # ¡Reutilizamos la misma plantilla del formulario de creación!
+    template_name = 'causas/causa_form.html'
+    
+    # En lugar de un success_url fijo, definimos un método para
+    # que después de editar, nos redirija a la página de detalle de ESA misma causa.
+    def get_success_url(self):
+        return reverse_lazy('detalle_causa', kwargs={'pk': self.object.pk})
+
+class CausaDeleteView(DeleteView):
+    model = Causa
+    
+    # Django por defecto buscará una plantilla llamada 'nombredelmodelo_confirm_delete.html'
+    # En nuestro caso, buscará 'causa_confirm_delete.html'.
+    # No es necesario especificar el template_name si seguimos esta convención.
+    
+    # La URL a la que se redirigirá al usuario después de eliminar con éxito.
     success_url = reverse_lazy('lista_causas')

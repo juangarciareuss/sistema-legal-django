@@ -2,7 +2,13 @@
 
 from django.urls import path
 # Ahora importamos la nueva vista también
-from .views import lista_causas, detalle_causa, CausaCreateView
+from .views import (
+    lista_causas, 
+    detalle_causa, 
+    CausaCreateView, 
+    CausaUpdateView, 
+    CausaDeleteView
+)
 
 urlpatterns = [
     # Cuando la URL esté vacía (la raíz de la app 'causas'),
@@ -15,4 +21,6 @@ urlpatterns = [
     path('<int:pk>/', detalle_causa, name='detalle_causa'),
 
     path('nueva/', CausaCreateView.as_view(), name='crear_causa'),
+    path('<int:pk>/editar/', CausaUpdateView.as_view(), name='editar_causa'),
+    path('<int:pk>/eliminar/', CausaDeleteView.as_view(), name='eliminar_causa'),
 ]
