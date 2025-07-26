@@ -123,3 +123,19 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# --- CONFIGURACIÓN DE ARCHIVOS MEDIA ---
+# La URL base desde donde se servirán los archivos subidos por los usuarios.
+MEDIA_URL = '/media/'
+
+# La ruta en tu disco duro donde se guardarán los archivos.
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# --- URL a la que se redirige después de un login exitoso ---
+LOGIN_REDIRECT_URL = '/'
+
+# Al final de config/settings.py
+LOGOUT_REDIRECT_URL = 'login'
+
+# Le dice a Django CUÁL es la página de login.
+LOGIN_URL = '/cuentas/login/'

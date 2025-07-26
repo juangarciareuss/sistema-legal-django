@@ -8,17 +8,42 @@
   <link href="https://cdn.datatables.net/2.0.8/css/dataTables.bootstrap5.css" rel="stylesheet">
 </head>
 <body>
-  <nav class="navbar navbar-dark bg-dark">
+<nav class="navbar navbar-dark bg-dark">
     <div class="container-fluid">
-      <a class="navbar-brand" href="#">Mi Sistema Legal</a>
+        <a class="navbar-brand" href="{% url 'dashboard' %}">Mi Sistema Legal</a>
+        
+        <div>
+            {% if user.is_authenticated %}
+                <span class="navbar-text me-3">
+                    Hola, {{ user.username }}
+                </span>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-sm">Dashboard</a>
+                <form action="{% url 'logout' %}" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-light btn-sm">Cerrar Sesión</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}" class="btn btn-outline-light">Iniciar Sesión</a>
+            {% endif %}
+        </div>
     </div>
-  </nav>
+</nav>
 
-  <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Listado General de Causas</h1>
-    <a href="{% url 'crear_causa' %}" class="btn btn-primary">Añadir Nueva Causa</a>
-    </div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        {% if cartera_activa %}
+            Listado de Causas: <span class="text-primary">{{ cartera_activa.nombre }}</span>
+        {% else %}
+            Listado General de Causas
+        {% endif %}
+    </h1>
+
+    {% if cartera_activa %}
+        <a href="{% url 'crear_causa' %}?cartera_id={{ cartera_activa.pk }}" class="btn btn-primary">Añadir Causa a {{ cartera_activa.nombre }}</a>
+    {% else %}
+        <a href="{% url 'crear_causa' %}" class="btn btn-primary">Añadir Nueva Causa</a>
+    {% endif %}
+</div>
 
     <div class="card">
       <div class="card-body">
@@ -28,7 +53,7 @@
               <th>Rol</th>
               <th>Deudor</th>
               <th>Tribunal</th>
-              <th>Etapa del Juicio</th>
+              <th>Etapa Actual</th>
               <th>Estado</th>
             </tr>
           </thead>
@@ -38,7 +63,7 @@
               <td><a href="{% url 'detalle_causa' causa.pk %}">{{ causa.rol }}</a></td>
               <td>{{ causa.deudor }}</td>
               <td>{{ causa.tribunal.nombre }}</td>
-              <td>{{ causa.get_etapa_juicio_display }}</td>
+              <td>{{ causa.etapa_actual }}</td>
               <td><span class="badge bg-success">{{ causa.get_estado_causa_display }}</span></td>
             </tr>
             {% empty %}

@@ -8,45 +8,267 @@
 </head>
 <body>
   <nav class="navbar navbar-dark bg-dark">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="{% url 'lista_causas' %}">Mi Sistema Legal</a>
-    </div>
+      <div class="container-fluid">
+          <a class="navbar-brand" href="{% url 'dashboard' %}">Mi Sistema Legal</a>
+          <div>
+              {% if user.is_authenticated %}
+                  <span class="navbar-text me-3">Hola, {{ user.username }}</span>
+                  <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-sm">Dashboard</a>
+                  <form action="{% url 'logout' %}" method="post" class="d-inline">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-outline-light btn-sm">Cerrar Sesión</button>
+                  </form>
+              {% else %}
+                  <a href="{% url 'login' %}" class="btn btn-outline-light">Iniciar Sesión</a>
+              {% endif %}
+          </div>
+      </div>
   </nav>
 
   <div class="container mt-4">
-    <a href="{% url 'lista_causas' %}" class="btn btn-outline-secondary btn-sm mb-3">&larr; Volver al Listado</a>
-
-    <div class="card">
-        <div class="card-header fs-4 d-flex justify-content-between align-items-center">
-            <span>Detalle de la Causa: <strong>{{ causa.rol }}</strong></span>
-            <div>
-                <a href="{% url 'editar_causa' causa.pk %}" class="btn btn-warning btn-sm">Editar</a>
-                <a href="{% url 'eliminar_causa' causa.pk %}" class="btn btn-danger btn-sm">Eliminar</a>
-            </div>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <a href="{% url 'lista_causas' %}" class="btn btn-outline-secondary btn-sm">&larr; Volver al Listado</a>
+            <h1 class="d-inline-block ms-3">Causa: {{ causa.rol }}</h1>
         </div>
-        <div class="card-body">
-            <h5 class="card-title">Información del Deudor</h5>
-            <p class="card-text"><strong>Nombre:</strong> {{ causa.deudor.nombres }} {{ causa.deudor.apellidos }}</p>
-            <p class="card-text"><strong>RUT:</strong> {{ causa.deudor.rut }}</p>
-            <hr>
-            <h5 class="card-title">Información del Juicio</h5>
-            <p class="card-text"><strong>Tribunal:</strong> {{ causa.tribunal.nombre }}</p>
-            <p class="card-text"><strong>Etapa del Juicio:</strong> {{ causa.get_etapa_juicio_display }}</p>
-            <p class="card-text"><strong>Estado de la Causa:</strong> {{ causa.get_estado_causa_display }}</p>
-            <p class="card-text"><strong>Árbitro:</strong> {{ causa.arbitro|default:"No asignado" }}</p>
-            <p class="card-text"><strong>Operación:</strong> {{ causa.operacion|default:"N/A" }}</p>
-            <p class="card-text"><strong>Total Costas:</strong> ${{ causa.total_costas|floatformat:0 }}</p>
-            <hr>
-            <h5 class="card-title">Asignación</h5>
-            <p class="card-text"><strong>Abogado Encargado:</strong> {{ causa.abogado_encargado|default:"No asignado" }}</p>
-            <p class="card-text"><strong>Fecha de Asignación:</strong> {{ causa.fecha_asignacion|date:"d-m-Y"|default:"No asignada" }}</p>
-        </div>
-        <div class="card-footer text-muted">
-            ID de Causa en el sistema: {{ causa.pk }} | Última actualización: {{ causa.ultima_actualizacion|date:"d-m-Y" }}
+        <div>
+            <a href="{% url 'editar_causa' causa.pk %}" class="btn btn-warning">Editar</a>
+            <a href="{% url 'eliminar_causa' causa.pk %}" class="btn btn-danger">Eliminar</a>
         </div>
     </div>
-  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<ul class="nav nav-tabs" id="causaTab" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="resumen-tab" data-bs-toggle="tab" data-bs-target="#resumen" type="button" role="tab">Resumen</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="detalles-tab" data-bs-toggle="tab" data-bs-target="#detalles" type="button" role="tab">Detalles del Juicio</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="historial-tab" data-bs-toggle="tab" data-bs-target="#historial" type="button" role="tab">Historial y Bitácora</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="antecedentes-tab" data-bs-toggle="tab" data-bs-target="#antecedentes" type="button" role="tab">Antecedentes</button>
+  </li>
+</ul>
+
+<div class="tab-content card" id="causaTabContent">
+<div class="tab-pane fade show active p-3" id="resumen" role="tabpanel">
+        <h5 class="card-title">Información del Deudor</h5>
+        <p><strong>Nombre:</strong> {{ causa.deudor.nombres }} {{ causa.deudor.apellidos }}</p>
+        <p><strong>RUT:</strong> {{ causa.deudor.rut }}</p>
+        <hr>
+        <h5 class="card-title">Información Clave del Juicio</h5>
+        <p><strong>Estado:</strong> {{ causa.get_estado_causa_display }}</p>
+        <p><strong>Etapa Actual:</strong> {{ causa.etapa_actual }}</p>
+        <p><strong>Abogado Encargado:</strong> {{ causa.abogado_encargado|default:"No asignado" }}</p>
+</div>
+
+
+<div class="tab-pane fade p-3" id="detalles" role="tabpanel">
+    <div class="row">
+        <div class="col-md-6">
+            <h5>Información Detallada del Juicio</h5>
+            <p><strong>Demandante:</strong> {{ causa.demandante|default:"N/A" }}</p>
+            <p><strong>Tribunal Exhorto:</strong> {{ causa.tribunal_exhorto|default:"N/A" }}</p>
+            <p><strong>Rol Exhorto:</strong> {{ causa.rol_exhorto|default:"N/A" }}</p>
+            <p><strong>Rol Juez Árbitro:</strong> {{ causa.rol_juez_arbitro|default:"N/A" }}</p>
+            <p><strong>Ubicación Expediente:</strong> {{ causa.ubicacion_expediente|default:"N/A" }}</p>
+        </div>
+        <div class="col-md-6">
+            <h5>Datos Financieros (Asociados a la Causa)</h5>
+            <p><strong>Nº Dividendo Moroso:</strong> {{ causa.n_dividendo_moroso|default:"N/A" }}</p>
+            <p><strong>Mes y Año Cuota Morosa:</strong> {{ causa.mes_ano_cuota_morosa|default:"N/A" }}</p>
+            <p><strong>Fecha Estado:</strong> {{ causa.fecha_estado|date:"d-m-Y"|default:"N/A" }}</p>
+        </div>
+    </div>
+</div>
+
+
+<div class="tab-pane fade p-3" id="historial" role="tabpanel">
+
+    <h4>Agregar Etapa al Historial</h4>
+    <form method="post" class="card card-body mb-4 border-success">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="{{ etapa_form.etapa.id_for_label }}" class="form-label fw-bold">Etapa Específica</label>
+                {{ etapa_form.etapa }}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="{{ etapa_form.fecha.id_for_label }}" class="form-label fw-bold">Fecha</label>
+                {{ etapa_form.fecha }}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="{{ etapa_form.costas.id_for_label }}" class="form-label fw-bold">Costas</label>
+                {{ etapa_form.costas }}
+            </div>
+            <div class="col-md-12 mb-3">
+                <label for="{{ etapa_form.descripcion.id_for_label }}" class="form-label fw-bold">Descripción</label>
+                {{ etapa_form.descripcion }}
+            </div>
+        </div>
+        <div class="text-end">
+            <button type="submit" name="submit_etapa" class="btn btn-success">Guardar Etapa</button>
+        </div>
+    </form>
+    <hr>
+
+    <h4 class="mt-4">Historial de Etapas del Juicio</h4>
+    <table class="table table-bordered table-sm">
+        <thead class="table-light">
+            <tr>
+                <th>Tipo de Etapa</th>
+                <th>Etapa Específica</th>
+                <th>Fecha</th>
+                <th>Descripción</th>
+                <th>Costas</th>
+                <th>Adjuntos</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for registro in causa.etapas.all %}
+            <tr>
+                <td>{{ registro.etapa.tipo_etapa.nombre }}</td>
+                <td>{{ registro.etapa.nombre }}</td>
+                <td>{{ registro.fecha|date:"d-m-Y" }}</td>
+                <td>{{ registro.descripcion }}</td>
+                <td>${{ registro.costas|floatformat:0 }}</td>
+                <td>
+                    <ul class="list-unstyled mb-0">
+                        {% for adjunto in registro.archivos.all %}
+                            <li>
+                                <a href="{{ adjunto.archivo.url }}" target="_blank">{{ adjunto.archivo.name|cut:"adjuntos_causas/" }}</a>
+                            </li>
+                        {% empty %}
+                            <li class="text-muted small">Sin adjuntos</li>
+                        {% endfor %}
+                    </ul>
+                    <button type="button" class="btn btn-info btn-sm mt-1" data-bs-toggle="modal" data-bs-target="#adjuntoModal" data-etapa-id="{{ registro.pk }}">
+                        + Adjuntar
+                    </button>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center text-muted">No hay etapas registradas.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <hr class="my-4">
+
+    <h4>Bitácora / Comentarios</h4>
+    <ul class="list-group list-group-flush mb-4">
+        {% for comentario in causa.comentarios.all %}
+            <li class="list-group-item">
+                <p class="mb-1">{{ comentario.texto }}</p>
+                <small class="text-muted">
+                    Por: <strong>{{ comentario.autor.username }}</strong> el {{ comentario.fecha_creacion|date:"d/m/Y H:i" }}
+                </small>
+            </li>
+        {% empty %}
+            <li class="list-group-item">No hay comentarios para esta causa.</li>
+        {% endfor %}
+    </ul>
+    <hr>
+
+    <h5>Añadir Nuevo Comentario</h5>
+    <form method="post" class="mt-3">
+        {% csrf_token %}
+        <div class="mb-3">
+            {{ comment_form.texto }}
+        </div>
+        <button type="submit" name="submit_comentario" class="btn btn-primary btn-sm">Añadir Comentario</button>
+    </form>
+</div>
+
+<div class="tab-pane fade p-3" id="antecedentes" role="tabpanel">
+  {% if causa.antecedentesleasing or causa.antecedentescbr %}
+    
+    {% if causa.antecedentesleasing %}
+        <h4>Antecedentes de Escritura Leasing</h4>
+        <div class="row">
+            <div class="col-md-6"><p><strong>Repertorio:</strong> {{ causa.antecedentesleasing.repertorio }}</p></div>
+            <div class="col-md-6"><p><strong>Nombre Notaría:</strong> {{ causa.antecedentesleasing.nombre_notaria }}</p></div>
+            <div class="col-md-6"><p><strong>Comuna Notaría:</strong> {{ causa.antecedentesleasing.comuna_notaria }}</p></div>
+            <div class="col-md-6"><p><strong>Fecha Escritura:</strong> {{ causa.antecedentesleasing.fecha_escritura|date:"d-m-Y" }}</p></div>
+            <div class="col-md-6"><p><strong>Nacionalidad:</strong> {{ causa.antecedentesleasing.nacionalidad }}</p></div>
+            <div class="col-md-6"><p><strong>Estado Civil:</strong> {{ causa.antecedentesleasing.estado_civil }}</p></div>
+            <div class="col-md-6"><p><strong>Ocupación:</strong> {{ causa.antecedentesleasing.ocupacion }}</p></div>
+            <div class="col-md-6"><p><strong>Precio Compraventa UF:</strong> {{ causa.antecedentesleasing.precio_compraventa_uf }}</p></div>
+            <div class="col-md-6"><p><strong>Aporte Mensual UF:</strong> {{ causa.antecedentesleasing.aporte_mensual_uf }}</p></div>
+            <div class="col-md-6"><p><strong>Fecha Primera Cuota:</strong> {{ causa.antecedentesleasing.fecha_primera_cuota }}</p></div>
+            <div class="col-md-6"><p><strong>Plazo Arriendo (meses):</strong> {{ causa.antecedentesleasing.plazo_arriendo }}</p></div>
+            <div class="col-md-6"><p><strong>Cláusula Penal:</strong> {{ causa.antecedentesleasing.clausula_penal }}</p></div>
+            <div class="col-md-6"><p><strong>Ubicación Cláusula Penal:</strong> {{ causa.antecedentesleasing.ubicacion_clausula_penal }}</p></div>
+        </div>
+        <hr>
+    {% endif %}
+
+    {% if causa.antecedentescbr %}
+        <h4>Antecedentes CBR y Cesión</h4>
+        <div class="row">
+            <div class="col-md-12"><p><strong>Dirección Vivienda CBR:</strong> {{ causa.antecedentescbr.direccion_vivienda_cbr }}</p></div>
+            <div class="col-md-6"><p><strong>Comuna CBR:</strong> {{ causa.antecedentescbr.comuna_cbr }}</p></div>
+            <div class="col-md-6"><p><strong>Año Dominio:</strong> {{ causa.antecedentescbr.ano_dominio }}</p></div>
+            <div class="col-md-6"><p><strong>Fojas Dominio:</strong> {{ causa.antecedentescbr.fojas_dominio }}</p></div>
+            <div class="col-md-6"><p><strong>Número Dominio:</strong> {{ causa.antecedentescbr.numero_dominio }}</p></div>
+            <div class="col-md-6"><p><strong>Fojas Arriendo:</strong> {{ causa.antecedentescbr.fojas_arriendo }}</p></div>
+            <div class="col-md-6"><p><strong>Número Arriendo:</strong> {{ causa.antecedentescbr.numero_arriendo }}</p></div>
+            <div class="col-md-6"><p><strong>Año Arriendo:</strong> {{ causa.antecedentescbr.ano_arriendo }}</p></div>
+            <div class="col-md-6"><p><strong>Repertorio Cesión:</strong> {{ causa.antecedentescbr.repertorio_cesion }}</p></div>
+            <div class="col-md-6"><p><strong>Nombre Notaría Cesión:</strong> {{ causa.antecedentescbr.nombre_notaria_cesion }}</p></div>
+            <div class="col-md-6"><p><strong>Comuna Notaría Cesión:</strong> {{ causa.antecedentescbr.comuna_notaria_cesion }}</p></div>
+            <div class="col-md-6"><p><strong>Fecha Escritura Cesión:</strong> {{ causa.antecedentescbr.fecha_escritura_cesion|date:"d-m-Y" }}</p></div>
+        </div>
+    {% endif %}
+
+  {% else %}
+     <p class="text-muted">No hay antecedentes de Leasing o CBR registrados para esta causa.</p>
+  {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <div class="modal fade" id="adjuntoModal" tabindex="-1" aria-labelledby="adjuntoModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="adjuntoModalLabel">Añadir Archivo Adjunto</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form method="post" enctype="multipart/form-data">
+              {% csrf_token %}
+              <div class="modal-body">
+                  {{ attachment_form.as_p }}
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" name="submit_adjunto" class="btn btn-primary">Subir Archivo</button>
+              </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <script>
+        const adjuntoModal = document.getElementById('adjuntoModal');
+        if (adjuntoModal) {
+          adjuntoModal.addEventListener('show.bs.modal', event => {
+            // Botón que activó el modal
+            const button = event.relatedTarget;
+            // Extraer el ID de la etapa del atributo data-etapa-id del botón
+            const etapaId = button.getAttribute('data-etapa-id');
+            // Encontrar el campo 'etapa_causa' en el formulario y asignarle el ID
+            const etapaInput = adjuntoModal.querySelector('#id_etapa_causa');
+            etapaInput.value = etapaId;
+          });
+        }
+    </script>
+    </body>
+</html>
+
+
+
 </body>
 </html>
